@@ -484,6 +484,10 @@ static inline int nfs4_register_sysctl(void)
 static inline void nfs4_unregister_sysctl(void)
 {
 }
+static inline int prefetch_register_sysctl(void)
+{
+	return 0;
+}
 #endif
 
 /* nfs4xdr.c */

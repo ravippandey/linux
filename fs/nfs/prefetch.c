@@ -12,6 +12,7 @@
 #include "internal.h"
 #include "iostat.h"
 #include "fscache.h"
+#include "nfs4_fs.h"
 
 
 static int global_var;
@@ -46,7 +47,7 @@ int prefetch_register_sysctl(void)
 {
 	/* register the above sysctl */
 	if (!register_sysctl_table(prefetch_parent_table)) {
-		printk(KERN_ALERT "Error: Failed to register sample_parent_table\n");
+		printk(KERN_ALERT "Error: Failed to register prefetch_parent_table\n");
 		return -EFAULT;
 	}
 	return 0;
