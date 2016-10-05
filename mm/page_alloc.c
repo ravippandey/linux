@@ -2254,7 +2254,7 @@ void free_hot_cold_page_list(struct list_head *list, bool cold)
 
 	list_for_each_entry_safe(page, next, list, lru) {
 		printk("Freeing pages\n");
-		mapping = page->mapping;
+		mapping = page_mapping(page);
 		if (!mapping) {
 			printk("No mapping\n");
 			goto out;
@@ -2273,7 +2273,11 @@ out:
 		trace_mm_page_free_batched(page, cold);
 		free_hot_cold_page(page, cold);
 	}
-	update(sum, count);
+	if (sum == 0 || count == 0) {
+		return;
+	}
+	st = div64_u64(sum, count);
+	printk("st=%lu\n", st);
 }
 
 /*
