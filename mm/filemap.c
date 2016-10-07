@@ -47,6 +47,9 @@
 
 #include <asm/mman.h>
 
+unsigned long avg = 0;
+unsigned long count = 0;
+
 /*
  * Shared mappings implemented 30.11.1994. It's not fully working yet,
  * though.
@@ -251,14 +254,34 @@ void __delete_from_page_cache(struct page *page, void *shadow)
 void delete_from_page_cache(struct page *page)
 {
 	struct address_space *mapping = page->mapping;
+	struct inode *inode1;
 	unsigned long flags;
+	struct timespec t1, now;
+	unsigned long diff;
 
 	void (*freepage)(struct page *);
 
 	BUG_ON(!PageLocked(page));
 
 	freepage = mapping->a_ops->freepage;
+	inode1 = mapping->host;
+	if (!inode1) {
+		//printk("Inode is null\n");
+		goto out;
+	}
+	t1 = inode1->i_atime;
+	if (t1.tv_sec == 0)
+		goto out;
+	//printk("Inodes time: %lu\n", t1.tv_sec);	
+	getnstimeofday(&now);
+	//printk("Curr time: %lu\n", now.tv_sec);	
+	diff = now.tv_sec - t1.tv_sec;
+	avg = div64_u64(avg*count + diff, count+1);
+	count++;
+	//printk("Avg now: %lu\n", avg);
+	//printk("count: %lu\n", count);
 
+out:
 	spin_lock_irqsave(&mapping->tree_lock, flags);
 	__delete_from_page_cache(page, NULL);
 	spin_unlock_irqrestore(&mapping->tree_lock, flags);
