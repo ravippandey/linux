@@ -35,9 +35,11 @@
 #include <linux/memcontrol.h>
 #include <linux/cleancache.h>
 #include <linux/rmap.h>
+#include <linux/list.h>
 #include "internal.h"
 
 #define CREATE_TRACE_POINTS
+#define hist_pages 128
 #include <trace/events/filemap.h>
 
 /*
@@ -47,8 +49,10 @@
 
 #include <asm/mman.h>
 
-unsigned long avg = 0;
+unsigned long pg_avg = 0;
 unsigned long count = 0;
+struct list_head hist_head;
+LIST_HEAD(hist_head);
 
 /*
  * Shared mappings implemented 30.11.1994. It's not fully working yet,
@@ -258,6 +262,7 @@ void delete_from_page_cache(struct page *page)
 	unsigned long flags;
 	struct timespec t1, now;
 	unsigned long diff;
+	struct history *node, *fst;
 
 	void (*freepage)(struct page *);
 
@@ -276,9 +281,18 @@ void delete_from_page_cache(struct page *page)
 	getnstimeofday(&now);
 	//printk("Curr time: %lu\n", now.tv_sec);	
 	diff = now.tv_sec - t1.tv_sec;
-	avg = div64_u64(avg*count + diff, count+1);
-	count++;
-	//printk("Avg now: %lu\n", avg);
+	node = (struct history *)kmalloc(sizeof(struct history), GFP_KERNEL);
+	node->lifetime = diff;
+	if ( count >= hist_pages) {
+		fst = list_first_entry(&hist_head, struct history, hist_queue);
+		pg_avg = div64_u64((pg_avg*(hist_pages) + node->lifetime - fst->lifetime), hist_pages);
+		list_del(&fst->hist_queue);
+	} else {
+		pg_avg = div64_u64(pg_avg*count + diff, count+1);
+		count++;	
+	}
+	list_add_tail(&node->hist_queue, &hist_head);
+	printk("Avg now: %lu\n", pg_avg);
 	//printk("count: %lu\n", count);
 
 out:

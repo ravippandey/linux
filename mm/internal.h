@@ -69,6 +69,7 @@ static inline void set_page_refcounted(struct page *page)
 }
 
 extern unsigned long highest_memmap_pfn;
+extern unsigned long pg_avg;
 
 /*
  * in mm/vmscan.c:
@@ -107,6 +108,11 @@ struct alloc_context {
 	int migratetype;
 	enum zone_type high_zoneidx;
 	bool spread_dirty_pages;
+};
+
+struct history {
+	struct list_head hist_queue;
+	unsigned long lifetime;
 };
 
 /*
