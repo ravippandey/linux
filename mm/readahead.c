@@ -266,7 +266,7 @@ static unsigned long get_next_ra_size(struct file_ra_state *ra,
 	else
 		newsize = 2 * cur;
 
-	printk("pg_avg=%lu\n", pg_avg);
+	printk("pg_avg=%lu, count = %lu\n", pg_avg, count);
 	return min(newsize, max);
 }
 

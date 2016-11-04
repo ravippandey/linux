@@ -70,6 +70,7 @@ static inline void set_page_refcounted(struct page *page)
 
 extern unsigned long highest_memmap_pfn;
 extern unsigned long pg_avg;
+extern unsigned long count;
 
 /*
  * in mm/vmscan.c:

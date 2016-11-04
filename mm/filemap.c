@@ -35,11 +35,11 @@
 #include <linux/memcontrol.h>
 #include <linux/cleancache.h>
 #include <linux/rmap.h>
-#include <linux/list.h>
 #include "internal.h"
 
 #define CREATE_TRACE_POINTS
 #define hist_pages 128
+#define ceil(n, d) (((n) < 0) ? (-((-(n))/(d))) : (n)/(d) + ((n)%(d) != 0))
 #include <trace/events/filemap.h>
 
 /*
@@ -50,10 +50,9 @@
 #include <asm/mman.h>
 
 unsigned long pg_avg = 0;
-unsigned long count = 0;
-struct list_head hist_head;
-LIST_HEAD(hist_head);
-
+unsigned long qlen = 0, count = 0;
+unsigned long history[hist_pages];
+unsigned int idx = 0;
 /*
  * Shared mappings implemented 30.11.1994. It's not fully working yet,
  * though.
@@ -262,7 +261,6 @@ void delete_from_page_cache(struct page *page)
 	unsigned long flags;
 	struct timespec t1, now;
 	unsigned long diff;
-	struct history *node, *fst;
 
 	void (*freepage)(struct page *);
 
@@ -281,19 +279,22 @@ void delete_from_page_cache(struct page *page)
 	getnstimeofday(&now);
 	//printk("Curr time: %lu\n", now.tv_sec);	
 	diff = now.tv_sec - t1.tv_sec;
-	node = (struct history *)kmalloc(sizeof(struct history), GFP_KERNEL);
-	node->lifetime = diff;
-	if ( count >= hist_pages) {
-		fst = list_first_entry(&hist_head, struct history, hist_queue);
-		pg_avg = div64_u64((pg_avg*(hist_pages) + node->lifetime - fst->lifetime), hist_pages);
-		list_del(&fst->hist_queue);
+	count++;
+	if ( qlen >= hist_pages) {
+		pg_avg = pg_avg + (int)ceil((diff - history[idx]), hist_pages);
+		//if (count <= 10000 ) {
+		//	printk("diff=%lu, history[%u]=%lu, val=%d\n", diff, idx, history[idx], (int)ceil((diff - history[idx]), hist_pages));
+		//}
+		history[idx] = diff;
 	} else {
-		pg_avg = div64_u64(pg_avg*count + diff, count+1);
-		count++;	
+		history[idx] = diff;
+		pg_avg = ceil((pg_avg*idx + diff), (idx+1));
+		qlen++;			
 	}
-	list_add_tail(&node->hist_queue, &hist_head);
-	printk("Avg now: %lu\n", pg_avg);
-	//printk("count: %lu\n", count);
+	idx = (idx + 1)%hist_pages;
+	//if (count <= 10000) {
+	printk("Avg now(%lu): %lu\n", count, pg_avg);
+	//}
 
 out:
 	spin_lock_irqsave(&mapping->tree_lock, flags);
