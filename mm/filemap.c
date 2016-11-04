@@ -292,9 +292,9 @@ void delete_from_page_cache(struct page *page)
 		qlen++;			
 	}
 	idx = (idx + 1)%hist_pages;
-	//if (count <= 10000) {
-	printk("Avg now(%lu): %lu\n", count, pg_avg);
-	//}
+	if (pg_avg <= 10000) {
+		printk("Avg now(%lu): %lu\n", count, pg_avg);
+	}
 
 out:
 	spin_lock_irqsave(&mapping->tree_lock, flags);
