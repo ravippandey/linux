@@ -37,6 +37,9 @@
 #include <linux/rmap.h>
 #include "internal.h"
 
+#include <linux/kernel.h>
+#include <linux/sysctl.h>
+
 #define CREATE_TRACE_POINTS
 #define hist_pages 128
 #define ceil(n, d) (((n) < 0) ? (-((-(n))/(d))) : (n)/(d) + ((n)%(d) != 0))
@@ -49,6 +52,7 @@
 
 #include <asm/mman.h>
 
+extern int sysctl_prefetch;
 unsigned long pg_avg = 0;
 unsigned long qlen = 0, count = 0;
 unsigned long history[hist_pages];
@@ -292,8 +296,8 @@ void delete_from_page_cache(struct page *page)
 		qlen++;			
 	}
 	idx = (idx + 1)%hist_pages;
-	if (pg_avg <= 10000) {
-		printk("Avg now(%lu): %lu\n", count, pg_avg);
+	if (pg_avg <= sysctl_prefetch) {
+		printk("Avg now(count=%lu): %lu; sysctl_prefetch=%d\n", count, pg_avg, sysctl_prefetch);
 	}
 
 out:

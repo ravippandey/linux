@@ -18,8 +18,15 @@
 #include <linux/syscalls.h>
 #include <linux/file.h>
 #include <linux/mm_inline.h>
+#include <linux/sysctl.h>
 
 #include "internal.h"
+
+#include <linux/mm.h>
+#include <linux/fs.h>
+#include <linux/writeback.h>
+#include <linux/sysctl.h>
+extern int sysctl_prefetch;
 
 /*
  * Initialise a struct file's readahead state.  Assumes that the caller has
@@ -261,17 +268,17 @@ static unsigned long get_next_ra_size(struct file_ra_state *ra,
 	unsigned long cur = ra->size;
 	unsigned long newsize;
 
-	if (pg_avg <= 1000)
+	if (pg_avg <= sysctl_prefetch)
 		newsize = 0;
-	else if (pg_avg <= 10000)
+	else if (pg_avg <= sysctl_prefetch)
 		newsize = cur;
         else if (cur < max / 16)
 		newsize = 4 * cur;
 	else
 		newsize = 2 * cur;
 
-	if (pg_avg <= 1000)
-		printk("pg_avg=%lu, count = %lu\n", pg_avg, count);
+	if (pg_avg <= sysctl_prefetch)
+		printk("pg_avg=%lu, count = %lu; sysctl_prefetch=%d\n", pg_avg, count, sysctl_prefetch);
 	return min(newsize, max);
 }
 

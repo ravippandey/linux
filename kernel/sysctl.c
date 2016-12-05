@@ -124,6 +124,9 @@ static int zero;
 static int __maybe_unused one = 1;
 static int __maybe_unused two = 2;
 static int __maybe_unused four = 4;
+int sysctl_prefetch;
+static int prefetch_min_val = 0;
+static int prefetch_max_val = 10000;
 static unsigned long one_ul = 1;
 static int one_hundred = 100;
 static int one_thousand = 1000;
@@ -1380,6 +1383,15 @@ static struct ctl_table vm_table[] = {
 		.extra1		= &one,
 		.extra2		= &four,
 	},
+	{ 
+		.procname	= "prefetch",
+		.data		= &sysctl_prefetch,
+		.maxlen		= sizeof(int),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+		.extra1		= &prefetch_min_val,
+		.extra2		= &prefetch_max_val,
+	},
 #ifdef CONFIG_COMPACTION
 	{
 		.procname	= "compact_memory",
@@ -1623,7 +1635,8 @@ static struct ctl_table vm_table[] = {
 		.extra2		= (void *)&mmap_rnd_compat_bits_max,
 	},
 #endif
-	{ }
+
+	{}
 };
 
 static struct ctl_table fs_table[] = {
