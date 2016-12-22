@@ -8,4 +8,11 @@ config SRCARCH
 	string
 	option env="SRCARCH"
 
+config MY_DEBUG
+	bool "Select to get some DEFINE"
+	default y
+	help
+		This is a config define that is sent to both make
+		and defined in a config.h header.
+
 source "arch/$SRCARCH/Kconfig"

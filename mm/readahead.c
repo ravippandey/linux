@@ -7,6 +7,7 @@
  *		Initial version.
  */
 
+#define pr_fmt(fmt) "%s:%s:%d:: " fmt, KBUILD_MODNAME, __func__, __LINE__
 #include <linux/kernel.h>
 #include <linux/gfp.h>
 #include <linux/export.h>
@@ -27,7 +28,10 @@
 #include <linux/writeback.h>
 #include <linux/sysctl.h>
 extern int sysctl_prefetch;
-
+#ifdef	CONFIG_MY_DEBUG
+#define print_ra(ra) pr_info("start=%lu; size=%d; async_size=%d; ra_pages=%d; mmap_miss=%d; prev_pos=%lld\n", \
+			ra->start, ra->size, ra->async_size, ra->ra_pages, ra->mmap_miss, ra->prev_pos);
+#endif
 /*
  * Initialise a struct file's readahead state.  Assumes that the caller has
  * memset *ra to zero.
@@ -268,10 +272,10 @@ static unsigned long get_next_ra_size(struct file_ra_state *ra,
 	unsigned long cur = ra->size;
 	unsigned long newsize;
 
+/*	if (pg_avg <= sysctl_prefetch)
+		newsize = 0;*/
 	if (pg_avg <= sysctl_prefetch)
 		newsize = 0;
-	else if (pg_avg <= sysctl_prefetch)
-		newsize = cur;
         else if (cur < max / 16)
 		newsize = 4 * cur;
 	else
@@ -493,6 +497,7 @@ void page_cache_sync_readahead(struct address_space *mapping,
 			       pgoff_t offset, unsigned long req_size)
 {
 	/* no read-ahead */
+	printk("ravip:calling sync method\n");
 	if (!ra->ra_pages)
 		return;
 
@@ -501,9 +506,19 @@ void page_cache_sync_readahead(struct address_space *mapping,
 		force_page_cache_readahead(mapping, filp, offset, req_size);
 		return;
 	}
+#ifdef CONFIG_MY_DEBUG
+	if (filp && !strcmp(filp->f_path.dentry->d_name.name, "foo")) {
+		print_ra(ra);
+	}
+#endif
 
 	/* do read-ahead */
 	ondemand_readahead(mapping, ra, filp, false, offset, req_size);
+#ifdef CONFIG_MY_DEBUG
+	if (filp && !strcmp(filp->f_path.dentry->d_name.name, "foo")) {
+		print_ra(ra);
+	}
+#endif
 }
 EXPORT_SYMBOL_GPL(page_cache_sync_readahead);
 
@@ -529,6 +544,7 @@ page_cache_async_readahead(struct address_space *mapping,
 			   unsigned long req_size)
 {
 	/* no read-ahead */
+	printk("ravip:calling async method\n");
 	if (!ra->ra_pages)
 		return;
 
@@ -547,7 +563,17 @@ page_cache_async_readahead(struct address_space *mapping,
 		return;
 
 	/* do read-ahead */
+#ifdef CONFIG_MY_DEBUG
+	if (filp && !strcmp(filp->f_path.dentry->d_name.name, "foo")) {
+		print_ra(ra);
+	}
+#endif
 	ondemand_readahead(mapping, ra, filp, true, offset, req_size);
+#ifdef CONFIG_MY_DEBUG
+	if (filp && !strcmp(filp->f_path.dentry->d_name.name, "foo")) {
+		print_ra(ra);
+	}
+#endif
 }
 EXPORT_SYMBOL_GPL(page_cache_async_readahead);
 

@@ -9,6 +9,7 @@
  * most "normal" filesystems (but you don't /have/ to use this:
  * the NFS filesystem used to do this differently, for example)
  */
+#define pr_fmt(fmt) "%s:%s:%d:: " fmt, KBUILD_MODNAME, __func__, __LINE__
 #include <linux/export.h>
 #include <linux/compiler.h>
 #include <linux/dax.h>
@@ -1668,6 +1669,8 @@ static ssize_t do_generic_file_read(struct file *filp, loff_t *ppos,
 find_page:
 		page = find_get_page(mapping, index);
 		if (!page) {
+			if (filp && !strcmp(filp->f_path.dentry->d_name.name, "foo"))
+				pr_info("Calling page_cache_sync_ra; index=%lu, last_index=%lu\n", index, last_index);
 			page_cache_sync_readahead(mapping,
 					ra, filp,
 					index, last_index - index);
@@ -1676,6 +1679,8 @@ find_page:
 				goto no_cached_page;
 		}
 		if (PageReadahead(page)) {
+			if (filp && !strcmp(filp->f_path.dentry->d_name.name, "foo"))
+				pr_info("Calling page_cache_async_ra; index=%lu, last_index=%lu\n", index, last_index);
 			page_cache_async_readahead(mapping,
 					ra, filp, page,
 					index, last_index - index);
