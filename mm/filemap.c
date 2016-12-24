@@ -274,22 +274,17 @@ void delete_from_page_cache(struct page *page)
 	freepage = mapping->a_ops->freepage;
 	inode1 = mapping->host;
 	if (!inode1) {
-		//printk("Inode is null\n");
+		printk("Inode is null\n");
 		goto out;
 	}
 	t1 = inode1->i_atime;
 	if (t1.tv_sec == 0)
 		goto out;
-	//printk("Inodes time: %lu\n", t1.tv_sec);	
 	getnstimeofday(&now);
-	//printk("Curr time: %lu\n", now.tv_sec);	
 	diff = now.tv_sec - t1.tv_sec;
 	count++;
 	if ( qlen >= hist_pages) {
 		pg_avg = pg_avg + (int)ceil((diff - history[idx]), hist_pages);
-		//if (count <= 10000 ) {
-		//	printk("diff=%lu, history[%u]=%lu, val=%d\n", diff, idx, history[idx], (int)ceil((diff - history[idx]), hist_pages));
-		//}
 		history[idx] = diff;
 	} else {
 		history[idx] = diff;

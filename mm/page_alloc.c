@@ -2253,15 +2253,12 @@ void free_hot_cold_page_list(struct list_head *list, bool cold)
 	unsigned long sum = 0, count = 0;
 
 	list_for_each_entry_safe(page, next, list, lru) {
-//		printk("Freeing pages\n");
 		mapping = page_mapping(page);
 		if (!mapping) {
-//			printk("No mapping\n");
 			goto out;
 		}
 		inode1 = mapping->host;
 		if (!inode1) {
-//			printk("No inode associated\n");
 			goto out;
 		}
 		t1 = inode1->i_atime;
@@ -2277,7 +2274,6 @@ out:
 		return;
 	}
 	st = div64_u64(sum, count);
-	printk("st=%lu\n", st);
 }
 
 /*

@@ -20,18 +20,18 @@
 #include <linux/file.h>
 #include <linux/mm_inline.h>
 #include <linux/sysctl.h>
-
 #include "internal.h"
-
 #include <linux/mm.h>
 #include <linux/fs.h>
 #include <linux/writeback.h>
 #include <linux/sysctl.h>
+
 extern int sysctl_prefetch;
 #ifdef	CONFIG_MY_DEBUG
 #define print_ra(ra) pr_info("start=%lu; size=%d; async_size=%d; ra_pages=%d; mmap_miss=%d; prev_pos=%lld\n", \
 			ra->start, ra->size, ra->async_size, ra->ra_pages, ra->mmap_miss, ra->prev_pos);
 #endif
+
 /*
  * Initialise a struct file's readahead state.  Assumes that the caller has
  * memset *ra to zero.
@@ -272,8 +272,6 @@ static unsigned long get_next_ra_size(struct file_ra_state *ra,
 	unsigned long cur = ra->size;
 	unsigned long newsize;
 
-/*	if (pg_avg <= sysctl_prefetch)
-		newsize = 0;*/
 	if (pg_avg <= sysctl_prefetch)
 		newsize = 0;
         else if (cur < max / 16)
@@ -497,7 +495,6 @@ void page_cache_sync_readahead(struct address_space *mapping,
 			       pgoff_t offset, unsigned long req_size)
 {
 	/* no read-ahead */
-	printk("ravip:calling sync method\n");
 	if (!ra->ra_pages)
 		return;
 
@@ -544,7 +541,6 @@ page_cache_async_readahead(struct address_space *mapping,
 			   unsigned long req_size)
 {
 	/* no read-ahead */
-	printk("ravip:calling async method\n");
 	if (!ra->ra_pages)
 		return;
 
